@@ -87,8 +87,8 @@ You are expected to provide:
 - metadata required for tracking and statistics,
 - configuration paths inside the scripts or via a user-defined config file.
 
-Please inspect the scripts in `scripts/` to adapt paths and parameters to your
-local data layout.
+Please inspect and modify the configuration file in `src/config/paths.py` to match your local data layout.
+
 
 ---
 
@@ -111,7 +111,7 @@ python run_calc_stats.py --contour_file /path/to/contours/contour_file.npz --qua
 ```
 
 
-Split evolution to evolution phases
+Segment the temporal evolution into distinct phases
 
 
 ```bash
@@ -148,5 +148,5 @@ See `requirements.txt` for exact versions.
 If you use this code in scientific work, please cite:
 
 > Korda et al.,  
-> *Equipartition field strength on the sunspot boundary: A statistical study*,  
+> *Equipartition field strength on the sunspot boundary: Statistical study*,  
 > Astronomy & Astrophysics, 2026.
