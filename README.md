@@ -31,16 +31,12 @@ expert users working with solar image data.
 ```
 src/
 ├─ geometry/     # contour extraction and geometry utilities
+├─ tracks/       # tracked feature containers and temporal linking
 ├─ pipelines/    # tracking, statistics, and plotting pipelines
 ├─ plotting/     # plotting helpers and animations
 ├─ stats/        # statistical analysis and phase segmentation
 ├─ io/           # FITS and data I/O
 └─ utils/        # small reusable utilities
-
-scripts/
-├─ run_tracking.py
-├─ recompute_statistics.py
-└─ make_animation.py
 ```
 
 Only the high-level structure is shown here; individual modules are documented
@@ -52,13 +48,9 @@ inline in the source code.
 
 ### 1. Clone the repository
 
-> **Note**  
-> The repository is currently under active development.  
-> Replace the URL below with the actual GitHub URL once the repository is public.
-
 ```bash
-git clone https://github.com/<username>/<repository-name>.git
-cd <repository-name>
+git clone https://github.com/Sirrah91/solar-contour-tracking.git
+cd solar-contour-tracking
 ```
 
 ---
@@ -102,26 +94,34 @@ local data layout.
 
 ## Quick start
 
-Run contour tracking:
+
+Run contour tracking via the main pipeline script:
+
 
 ```bash
-python scripts/run_tracking.py
+python run_contour_tracking.py --data_dir /path/to/fits --contour_quantity Ic --penumbra_threshold 0.9 --umbra_threshold 0.5 --pore_threshold 0.65
 ```
 
-Recompute statistics:
+
+Compute statistics:
+
 
 ```bash
-python scripts/recompute_statistics.py
+python run_calc_stats.py --contour_file /path/to/contours/contour_file.npz --quantities Ic --stat_types sunspots
 ```
 
-Create animations:
+
+Split evolution to evolution phases
+
 
 ```bash
-python scripts/make_animation.py
+python run_split_to_phases.py --contour_dirname /path/to/contours --mode sunspots
 ```
 
-Each script is intended to be **edited or wrapped** for specific datasets and
-experiments.
+
+The pipeline script is designed to be configured via command-line arguments
+and parameter files. It can be edited, wrapped, or extended for specific
+datasets and experiments.
 
 ---
 
@@ -150,9 +150,3 @@ If you use this code in scientific work, please cite:
 > Korda et al.,  
 > *Equipartition field strength on the sunspot boundary: A statistical study*,  
 > Astronomy & Astrophysics, 2026.
-
----
-
-## License
-
-Specify the license here (e.g. MIT, BSD-3-Clause, GPL-3.0).
