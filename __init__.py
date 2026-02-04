@@ -1,13 +1,3 @@
-"""
-jak ukladat tracks a obecne nested dicts aby to bylo prenositelne?
-pipreqs neni dostatecne rekurzivni a nevidi dost daleko...
-
-select_three_frames vraci cely df pro ty 3 radky? minimalne jeste obervation_id a frame_id
-- TAKY ASI VYBER N ROVNOMERNE, TO VEZME JAKOU FAZI EXTRA A POKUD CHYBI TAK SAHNE VEDLE?
-
-ZKUSIT KONTROLNI OBRAZKY, JESTLI FUNGUJI
-"""
-
 # Create requirements.txt by following these steps:
 #
 # 1) Generate requirements.in by scanning actual imports in the code:
@@ -24,15 +14,6 @@ ZKUSIT KONTROLNI OBRAZKY, JESTLI FUNGUJI
 # 3) Generate the final, pinned requirements.txt:
 #    pip-compile --output-file=requirements.txt requirements.in
 
-"""
-1) celkovy tok v oblasti okolo nove vznikele pory
-    - kolik je potreba na vytvoreni?
-    - v nejake cele oblasti okolo ni, ne jen uvnitr kontury
-2) podminky na casove trvani nove pory
-    - minimalne existuje min_time cca 3 snimky
-    - uvolnit oblast, pokud se tam nic nevyskytuje alespon max_time cca 10 snimku
-"""
-
 import os
 
 # Filter out TensorFlow warnings
@@ -43,3 +24,4 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Extend PATH to include LaTeX binaries
 os.environ["PATH"] += os.pathsep + "/usr/bin:/usr/share/texlive/bin"
+
