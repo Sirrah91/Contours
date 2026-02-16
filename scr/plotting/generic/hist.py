@@ -75,9 +75,11 @@ def plot_hist2d(
         cmap=cmap,
     )
 
+    mask = np.isfinite(x) & np.isfinite(y)
+
     _, _, _, im = ax.hist2d(
-        x,
-        y,
+        x[mask],
+        y[mask],
         **hist2d_kwargs,
     )
 
