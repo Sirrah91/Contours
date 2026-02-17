@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from typing import Literal
+from typing import Literal, Callable
 
 from scr.utils.filesystem import is_empty
 
@@ -14,9 +14,10 @@ def filter_combined_df(
     """
 
     group_cols = ["observation_id", "sunspot_id"]
-
-    # Precompute group keys ONCE (important for speed & correctness)
-    group_keys = df[group_cols].apply(tuple, axis=1)
+    if set(group_cols).issubset(df.columns):
+        # MUST BE PRESENT FOR `MODE IN ["ALL", "ANY"]`, NOT FOR `MODE == "FRAME-WISE"
+        # Precompute group keys ONCE (important for speed & correctness)
+        group_keys = df[group_cols].apply(tuple, axis=1)
 
     # ------------------------------------------------------------------
     # Helpers
@@ -100,19 +101,50 @@ def filter_combined_df(
             min_val: float | None = None,
             max_val: float | None = None,
             exact_val: float | str | None = None,
+            func: Callable[[pd.Series], pd.Series] | None = None,
     ) -> pd.DataFrame:
+
+        filter_types = [
+            exact_val is not None,
+            min_val is not None or max_val is not None,
+            func is not None,
+        ]
+
+        if sum(filter_types) != 1:
+            raise ValueError("Exactly one of exact_value, range, or func must be provided.")
 
         series = df[column]
 
-        # ---------------- Scalar fast path
-        if pd.api.types.is_numeric_dtype(series):
-            row_mask = _scalar_satisfies(
-                series.to_numpy(),
-                min_val=min_val,
-                max_val=max_val,
-                exact_val=exact_val,
-            )
-            row_mask = pd.Series(row_mask, index=series.index)
+        # ---------------- Callable filter (highest priority)
+        if func is not None:
+            """
+            # EXAMPLES
+            # Scalar/vectorised operations:
+            func = lambda s: s == exact_val
+            func = lambda s: s.between(min_val, max_val)
+            #
+            # Array/list operations:
+            func = lambda s: s.apply(lambda arr: np.mean(arr) > 2)
+            func = lambda s: s.apply(lambda arr: np.any(arr > 11) and np.all(arr > 11))  # non-empty only
+            """
+            row_mask = func(series)
+
+            if not isinstance(row_mask, pd.Series):
+                raise TypeError(f"'func' must return pandas Series, got {type(row_mask)}")
+
+            if not row_mask.index.equals(series.index):
+                raise ValueError("'func' must return Series aligned with input index")
+
+            if row_mask.dtype != bool:
+                raise TypeError("'func' must return boolean Series.")
+
+        # ---------------- Fast vectorised scalar/string paths
+        elif pd.api.types.is_string_dtype(series) and exact_val is not None:
+            row_mask = series == exact_val
+        elif pd.api.types.is_numeric_dtype(series) and exact_val is not None:
+            row_mask = series == exact_val
+        elif pd.api.types.is_numeric_dtype(series):  # numeric min/max
+            row_mask = series.between(min_val, max_val)
 
         # ---------------- Generic (arrays / objects)
         else:
@@ -168,7 +200,7 @@ def filter_combined_df(
     for key, spec in filtering_kwargs.items():
 
         # ---- Case 1: direct column
-        if "min_value" in spec or "exact_value" in spec:
+        if key in df:
             df = _apply_filter(
                 df,
                 column=key,
@@ -176,6 +208,7 @@ def filter_combined_df(
                 max_val=spec.get("max_value"),
                 exact_val=spec.get("exact_value"),
                 mode=spec["mode"],
+                func=spec.get("func"),
             )
             continue
 
@@ -185,7 +218,7 @@ def filter_combined_df(
             col = _build_column_name(
                 part=part,
                 param=param,
-                stats_key=p_spec.get("stats_key"),
+                stats_key=p_spec.get("stats_key", "Ic"),
             )
 
             if col not in df.columns:
@@ -198,6 +231,7 @@ def filter_combined_df(
                 max_val=p_spec.get("max_value"),
                 exact_val=p_spec.get("exact_value"),
                 mode=p_spec["mode"],
+                func=p_spec.get("func"),
             )
 
     return df
