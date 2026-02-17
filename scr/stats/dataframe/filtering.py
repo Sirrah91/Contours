@@ -144,7 +144,9 @@ def filter_combined_df(
         elif pd.api.types.is_numeric_dtype(series) and exact_val is not None:
             row_mask = series == exact_val
         elif pd.api.types.is_numeric_dtype(series):  # numeric min/max
-            row_mask = series.between(min_val, max_val)
+            low = -np.inf if min_val is None else min_val
+            high = np.inf if max_val is None else max_val
+            row_mask = series.between(low, high)
 
         # ---------------- Generic (arrays / objects)
         else:
